@@ -12,15 +12,19 @@ class Grammar:
         }
 
 
-def print_strings(number_of_strings):
+def print_strings(number_of_strings, showProgress):
     grammar = Grammar()
+
     for i in range(number_of_strings):
+        tmp = "S"
         start = grammar.VN[0]
         while start[-1] not in grammar.VT:
             t = start[-1]
             start = start[:-1] + random.choice(grammar.P[t])
+            tmp += f" -> {start}"
         print(start)
+        if (showProgress): print(tmp + "\n")
 
 
 
-print_strings(5)
+print_strings(5, True)

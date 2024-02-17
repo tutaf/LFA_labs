@@ -2,6 +2,7 @@
 
 ### Course: Formal Languages & Finite Automata
 ### Author: Andrei Cernisov
+#### Variant 3
 
 ----
 
@@ -24,6 +25,7 @@ I used Python to implement the given grammar. The code defines a `Grammar` class
 ```python
 import random
 
+
 class Grammar:
     def __init__(self):
         self.VN = ['S', 'D', 'R']
@@ -35,16 +37,22 @@ class Grammar:
         }
 
 
-def print_strings(number_of_strings):
+def print_strings(number_of_strings, showProgress):
     grammar = Grammar()
+
     for i in range(number_of_strings):
+        tmp = "S"
         start = grammar.VN[0]
         while start[-1] not in grammar.VT:
             t = start[-1]
             start = start[:-1] + random.choice(grammar.P[t])
+            tmp += f" -> {start}"
         print(start)
+        if (showProgress): print(tmp + "\n")
 
-print_strings(5)
+
+
+print_strings(5, True)
 ```
 
 * **Grammar Class:** A `Grammar` class stores the non-terminals (`VN`), terminals (`VT`), and production rules (`P`) which define the language.
@@ -52,6 +60,26 @@ print_strings(5)
     1. Starts with the start symbol ('S').
     2. Repeatedly replaces non-terminal symbols with a random production rule.
     3. Continues until all symbols in the string are terminals.
+
+### Output
+```
+abd
+S -> aS -> abD -> abd
+
+aafbf
+S -> aS -> aaS -> aafR -> aafbR -> aafbf
+
+aff
+S -> aS -> afR -> aff
+
+ff
+S -> fR -> ff
+
+fbf
+S -> fR -> fbR -> fbf
+
+```
+
 
 ## Conclusions 
 
