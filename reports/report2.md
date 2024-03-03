@@ -116,10 +116,18 @@ class Grammar:
             return 1  # context sensivive grammar
 ```
 
-## Evaluation and Conclusions
+### NFA Visualisation
+Since I wasn't able to implement FA visualization in code, I did it manually:
+![nfa visualization](images/lab2_nfa.png)
+
+### NFA to DFA Conversion
+Just like the previous part, this one was done manually:
+![nfa to dfa visualisation](images/lab2_dfa.png)
+
+## Conclusion
 
 The lab successfully achieved its objectives, demonstrating the theoretical concepts of determinism and the Chomsky hierarchy through practical implementations. The conversion from a finite automaton to a regular grammar and the classification of grammars based on the Chomsky hierarchy were particularly insightful, providing a hands-on understanding of these concepts.
 
-Additionally, the process of converting an NDFA to a DFA, although not detailed in this report, is a critical skill in automata theory and its applications. The optional task of graphically representing finite automata offers a visual understanding of the automata's structure and transitions, which can be beneficial for comprehension and analysis.
+Additionally, the process of converting an NDFA to a DFA, although not implemented in code, is a critical skill in automata theory and its applications.
 
 Overall, this lab has laid a solid foundation for understanding finite automata, their classifications, and their representations through grammars, serving as a stepping stone for more advanced studies in formal languages and automata theory.
