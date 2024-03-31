@@ -27,7 +27,8 @@ class Step:
             description = f"exactly {self.repetitions} times"
             exact_repetitions = self.repetitions
 
-        description = f"Picking random element from {self.symbols} " + description
+        description = (f"Repeating '{self.symbols[0]}' " if len(self.symbols) == 1 else
+                       f"Picking random element from {self.symbols} ") + description
 
         for i in range(exact_repetitions):
             choice = random.choice(self.symbols)
@@ -49,44 +50,50 @@ def generate_steps(regex):
         yield step
 
 
-regex1_pattern = 'O(P|Q|R)+2(3|4)'
-regex1 = [
-    (['O'], 1),
-    (['P', 'Q', 'R'], '+'),
-    (['2'], 1),
-    (['3', '4'], 1)
+regex_patterns = [
+    'O(P|Q|R)+2(3|4)',
+    'A*B(C|D|E)F(G|H|i){2}',
+    'J+K(L|M|N)*O?(P|Q){3}'
 ]
 
-regex2_pattern = 'A*B(C|D|E)F(G|H|i){2}'
-regex2 = [
-    (['A'], '*'),
-    (['B'], 1),
-    (['C', 'D', 'E'], 1),
-    (['F'], 1),
-    (['G', 'H', 'i'], 2)
+regex_steps = [
+    [
+        (['O'], 1),
+        (['P', 'Q', 'R'], '+'),
+        (['2'], 1),
+        (['3', '4'], 1)
+    ],
+    [
+        (['A'], '*'),
+        (['B'], 1),
+        (['C', 'D', 'E'], 1),
+        (['F'], 1),
+        (['G', 'H', 'i'], 2)
+    ],
+    [
+        (['J'], '+'),
+        (['K'], 1),
+        (['L', 'M', 'N'], '*'),
+        (['O'], '?'),
+        (['P', 'Q'], 3)
+    ]
 ]
 
-regex3_pattern = 'J+K(L|M|N)*O?(P|Q){3}'
-regex3 = [
-    (['J'], '+'),
-    (['K'], 1),
-    (['L', 'M', 'N'], '*'),
-    (['O'], '?'),
-    (['P', 'Q'], 3)
-]
+regex_number = int(input("Enter the number of regular expression: ")) - 1
+print(f"Expression {regex_number}: {regex_patterns[regex_number]}\n")
 
-steps_generator = generate_steps(regex3)
+steps_generator = generate_steps(regex_steps[regex_number])
 steps = list(steps_generator)
 
 regex_result = ""
 for i in range(len(steps)):
     step = steps[i]
     result, description, progress_string = step.get_matching_string_and_description()
-    print(f"Step {i}: {description}")
+    print(f"Step {i+1}: {description}")
     print(f"{progress_string}")
     regex_result += result
 
 print(f"\nResult: {regex_result}")
-print(f"Is a valid string: {re.fullmatch(regex3_pattern, regex_result) is not None}")
+print(f"Is a valid string: {re.fullmatch(regex_patterns[regex_number], regex_result) is not None}")
 
 
