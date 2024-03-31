@@ -189,7 +189,7 @@ Enter the number of regular expression: 2
 Expression 2: A*B(C|D|E)F(G|H|i){2}
 
 Step 1: Picking random element from ['A'] zero or more times
--> AA -> AAA -> AAAA
+A -> AA -> AAA -> AAAA
 Step 2: Repeating 'B' exactly 1 times
 B
 Step 3: Picking random element from ['C', 'D', 'E'] exactly 1 times
