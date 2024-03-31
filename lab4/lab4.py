@@ -6,8 +6,8 @@ REPETITION_LIMIT = 5
 
 class Step:
     def __init__(self):
-        self.symbols = []  # '?' - any symbol
-        self.repetitions = 0  # '*' - zero or more; '+' - once or more
+        self.symbols = []  # '.' - any symbol
+        self.repetitions = 0  # '*' - zero or more; '+' - once or more; '?' - optional (0 or 1)
 
     def get_matching_string_and_description(self):
         result = ""
@@ -20,6 +20,9 @@ class Step:
         elif self.repetitions == '+':
             description = "one or more times"
             exact_repetitions = random.randint(1, REPETITION_LIMIT)
+        elif self.repetitions == '?':
+            description = "is optional (0 or 1 repetitions)"
+            exact_repetitions = random.randint(0, 1)
         else:
             description = f"exactly {self.repetitions} times"
             exact_repetitions = self.repetitions
@@ -28,7 +31,7 @@ class Step:
 
         for i in range(exact_repetitions):
             choice = random.choice(self.symbols)
-            if choice == '?':
+            if choice == '.':
                 choice = random.choice(string.ascii_lowercase)
             result += choice
             progress.append(result)
@@ -54,7 +57,25 @@ regex1 = [
     (['3', '4'], 1)
 ]
 
-steps_generator = generate_steps(regex1)
+regex2_pattern = 'A*B(C|D|E)F(G|H|i){2}'
+regex2 = [
+    (['A'], '*'),
+    (['B'], 1),
+    (['C', 'D', 'E'], 1),
+    (['F'], 1),
+    (['G', 'H', 'i'], 2)
+]
+
+regex3_pattern = 'J+K(L|M|N)*O?(P|Q){3}'
+regex3 = [
+    (['J'], '+'),
+    (['K'], 1),
+    (['L', 'M', 'N'], '*'),
+    (['O'], '?'),
+    (['P', 'Q'], 3)
+]
+
+steps_generator = generate_steps(regex3)
 steps = list(steps_generator)
 
 regex_result = ""
@@ -66,6 +87,6 @@ for i in range(len(steps)):
     regex_result += result
 
 print(f"\nResult: {regex_result}")
-print(f"Is a valid string: {re.fullmatch(regex1_pattern, regex_result) is not None}")
+print(f"Is a valid string: {re.fullmatch(regex3_pattern, regex_result) is not None}")
 
 
