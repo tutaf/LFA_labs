@@ -80,7 +80,7 @@ regex_steps = [
 ]
 
 regex_number = int(input("Enter the number of regular expression: ")) - 1
-print(f"Expression {regex_number}: {regex_patterns[regex_number]}\n")
+print(f"Expression {regex_number+1}: {regex_patterns[regex_number]}\n")
 
 steps_generator = generate_steps(regex_steps[regex_number])
 steps = list(steps_generator)
