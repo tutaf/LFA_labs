@@ -50,39 +50,58 @@ def generate_steps(regex):
         yield step
 
 
-regex_patterns = [
-    'O(P|Q|R)+2(3|4)',
-    'A*B(C|D|E)F(G|H|i){2}',
-    'J+K(L|M|N)*O?(P|Q){3}'
-]
+def parse_regex_to_steps(regex):
+    steps = []
+    i = 0
+    while i < len(regex):
+        symbols = []
+        repetitions = 1
 
-regex_steps = [
-    [
-        (['O'], 1),
-        (['P', 'Q', 'R'], '+'),
-        (['2'], 1),
-        (['3', '4'], 1)
-    ],
-    [
-        (['A'], '*'),
-        (['B'], 1),
-        (['C', 'D', 'E'], 1),
-        (['F'], 1),
-        (['G', 'H', 'i'], 2)
-    ],
-    [
-        (['J'], '+'),
-        (['K'], 1),
-        (['L', 'M', 'N'], '*'),
-        (['O'], '?'),
-        (['P', 'Q'], 3)
-    ]
-]
+        # handle character or group
+        if regex[i] == '(':
+            # group start, find closing parenthesis
+            group_end = regex.find(')', i)
+            symbols = regex[i + 1:group_end].split('|')
+            i = group_end
+        elif regex[i] == '[':
+            # bracket start, find closing bracket
+            bracket_end = regex.find(']', i)
+            symbols = list(regex[i + 1:bracket_end])  # consider each symbol within brackets individually
+            i = bracket_end
+        else:
+            # handle single characters
+            symbols = [regex[i]]
 
-regex_number = int(input("Enter the number of regular expression: ")) - 1
-print(f"Expression {regex_number+1}: {regex_patterns[regex_number]}\n")
+        # look ahead for repetition symbols
+        if i + 1 < len(regex):
+            if regex[i + 1] in '*+?':
+                repetitions = regex[i + 1]
+                i += 1  # skip the repetition symbol
+            elif regex[i + 1] == '{':
+                # find closing brace and extract repetition number
+                brace_end = regex.find('}', i)
+                repetitions = int(regex[i + 2:brace_end])
+                i = brace_end
 
-steps_generator = generate_steps(regex_steps[regex_number])
+        steps.append((symbols, repetitions))
+
+        # move to the next symbol
+        i += 1
+
+    return steps
+
+# Test patterns:
+# O(P|Q|R)+2(3|4)
+# A*B(C|D|E)F(G|H|i){2}
+# J+K(L|M|N)*O?(P|Q){3}
+
+
+input_ = input("Enter the number of regular expression: ")
+print()
+
+steps_parsed = parse_regex_to_steps(input_)
+
+steps_generator = generate_steps(steps_parsed)
 steps = list(steps_generator)
 
 regex_result = ""
@@ -94,6 +113,6 @@ for i in range(len(steps)):
     regex_result += result
 
 print(f"\nResult: {regex_result}")
-print(f"Is a valid string: {re.fullmatch(regex_patterns[regex_number], regex_result) is not None}")
+print(f"Is a valid string: {re.fullmatch(input_, regex_result) is not None}")
 
 

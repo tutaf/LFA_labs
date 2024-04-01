@@ -27,86 +27,32 @@ Regular expressions are widely used in various applications, including text proc
 ## Objectives:
 
 * Understand the concept of regular expressions and their applications.
-* Implement a program that generates valid combinations of symbols according to provided regular expressions.
+* Implement a program that generates valid combinations of symbols according to user-provided regular expressions.
 * Demonstrate the step-by-step processing of regular expressions.
 
 ## Implementation description
 
-The implementation consists of two main components: a `Step` class and a `generate_steps` function.
+The implementation consists of three main components: a `Step` class, a `generate_steps` function, and a `parse_regex_to_steps` function.
 
 ### Step Class
 
-The `Step` class represents a single step in the process of generating a valid string for a given regular expression. It has two attributes:
-
-- `symbols`: A list of characters or the special symbol '.' representing any character.
-- `repetitions`: A character representing the repetition pattern ('*', '+', '?', or a specific number).
-
-The `__init__` method initializes the `symbols` list and `repetitions` attribute:
+The `Step` class remains the same as in the previous implementation. It represents a single step in the process of generating a valid string for a given regular expression.
 
 ```python
-def __init__(self):
-    self.symbols = []  # '.' - any symbol
-    self.repetitions = 0  # '*' - zero or more; '+' - once or more; '?' - optional (0 or 1)
+class Step:
+    def __init__(self):
+        self.symbols = []  # '.' - any symbol
+        self.repetitions = 0  # '*' - zero or more; '+' - once or more; '?' - optional (0 or 1)
+
+    def get_matching_string_and_description(self):
+        # ... (same implementation as before)
 ```
 
-The `get_matching_string_and_description` method is the core of the `Step` class. It generates a valid string based on the `symbols` and `repetitions` attributes, and also returns a description of the step and a progress string showing the intermediate steps. Here's a breakdown of the `get_matching_string_and_description` method:
-
-```python
-def get_matching_string_and_description(self):
-    result = ""
-    progress = []
-    description = ""
-    exact_repetitions = 0
-```
-
-This part of code initializes three varialbes: `result` to store the generated string, `progress` to keep track of the intermediate steps, and `description` to hold the description of the step.
-
-```python
-if self.repetitions == '*':
-    description = "zero or more times"
-    exact_repetitions = random.randint(0, REPETITION_LIMIT)
-elif self.repetitions == '+':
-    description = "one or more times"
-    exact_repetitions = random.randint(1, REPETITION_LIMIT)
-elif self.repetitions == '?':
-    description = "is optional (0 or 1 repetitions)"
-    exact_repetitions = random.randint(0, 1)
-else:
-    description = f"exactly {self.repetitions} times"
-    exact_repetitions = self.repetitions
-```
-
-This block of code determines the exact number of repetitions based on the `repetitions` attribute. If the repetition is '*', the number of repetitions is randomly chosen between 0 and the `REPETITION_LIMIT` constant. If the repetition is '+', the number of repetitions is randomly chosen between 1 and the `REPETITION_LIMIT`. If the repetition is '?', the number of repetitions is randomly chosen between 0 and 1. Otherwise, the exact number of repetitions is taken from the `repetitions` attribute.
-
-```python
-description = (f"Repeating '{self.symbols[0]}' " if len(self.symbols) == 1 else
-               f"Picking random element from {self.symbols} ") + description
-```
-
-This line constructs the description string based on whether the `symbols` list contains a single element or multiple elements.
-
-```python
-for i in range(exact_repetitions):
-    choice = random.choice(self.symbols)
-    if choice == '.':
-        choice = random.choice(string.ascii_lowercase)
-    result += choice
-    progress.append(result)
-```
-
-This loop iterates `exact_repetitions` times. In each iteration, it randomly selects a symbol from the `symbols` list. If the selected symbol is '.', it is replaced with a randomly chosen lowercase letter. The selected symbol is then appended to the `result` string, and the current `result` is added to the `progress` list.
-
-```python
-progress_string = " -> ".join(progress)
-
-return result, description, progress_string
-```
-
-Finally, the `progress` list is joined into a single string with the arrows (`->`) separating the intermediate steps, and the `result`, `description`, and `progress_string` are returned.
+The `get_matching_string_and_description` method is responsible for generating a valid string based on the `symbols` and `repetitions` attributes, and also returns a description of the step and a progress string showing the intermediate steps.
 
 ### generate_steps Function
 
-The `generate_steps` function takes a regular expression as input and yields a sequence of `Step` objects representing each step in the regular expression.
+The `generate_steps` function remains unchanged from the previous implementation. It takes a list of tuples containing `symbols` and `repetitions` for each step, and yields `Step` objects representing those steps.
 
 ```python
 def generate_steps(regex):
@@ -117,48 +63,90 @@ def generate_steps(regex):
         yield step
 ```
 
-This function iterates over the provided `regex` list, which consits of tuples containing the `symbols` and `repetitions` for each step. For each tuple, a new `Step` object is created, and its `symbols` and `repetitions` attributes are set accordingly. The `Step` object is then yielded to the caller.
-
-### Main Program
-
-The main program consists of three parts:
-
-1. Defining the regular expression patterns and their corresponding steps.
-2. Taking user input to select the regular expression to be processed.
-3. Generating valid strings and displaying the step-by-step process.
+### parse_regex_to_steps Function
 
 ```python
-regex_patterns = [
-    'O(P|Q|R)+2(3|4)',
-    # ... other patterns ...
-]
+def parse_regex_to_steps(regex):
+    steps = []
+    i = 0
+    while i < len(regex):
+        symbols = []
+        repetitions = 1
+```
 
-regex_steps = [
-    [
-        (['O'], 1),
-        (['P', 'Q', 'R'], '+'),
-        (['2'], 1),
-        (['3', '4'], 1)
-    ],
-    # ... steps for other expressions ...
-]
-```
-This is the definition of regular expressions for which the program will generate valid strings.
+This part initializes an empty list `steps` to store the steps and sets the initial values for `symbols` (an empty list) and `repetitions` (1, which represents a single occurrence).
 
+```python
+        if regex[i] == '(':
+            # group start, find closing parenthesis
+            group_end = regex.find(')', i)
+            symbols = regex[i + 1:group_end].split('|')
+            i = group_end
 ```
-regex_number = int(input("Enter the number of regular expression: ")) - 1
-print(f"Expression {regex_number+1}: {regex_patterns[regex_number]}\n")
-```
-This code snippet prompts the user to enter the number of the regular expression to be processed.
 
+This block of code handles character groups enclosed within parentheses, such as `(P|Q|R)`. It finds the closing parenthesis using the `find` method and then splits the characters between the parentheses using the `|` (pipe) symbol as the separator. The resulting list of symbols is assigned to the `symbols` variable, and the index `i` is updated to the position after the closing parenthesis.
+
+```python
+        elif regex[i] == '[':
+            # bracket start, find closing bracket
+            bracket_end = regex.find(']', i)
+            symbols = list(regex[i + 1:bracket_end])  # consider each symbol within brackets individually
+            i = bracket_end
 ```
-steps_generator = generate_steps(regex_steps[regex_number])
+
+This block of code handles character classes enclosed within square brackets, such as `[abc]`. It finds the closing bracket using the `find` method and then converts the characters between the brackets into a list, where each character is treated as an individual symbol. The resulting list of symbols is assigned to the `symbols` variable, and the index `i` is updated to the position after the closing bracket.
+
+```python
+        else:
+            # handle single characters
+            symbols = [regex[i]]
+```
+
+If the current character is neither an opening parenthesis nor an opening bracket, it is treated as a single literal character. The character is added to the `symbols` list.
+
+```python
+        # look ahead for repetition symbols
+        if i + 1 < len(regex):
+            if regex[i + 1] in '*+?':
+                repetitions = regex[i + 1]
+                i += 1  # skip the repetition symbol
+            elif regex[i + 1] == '{':
+                # find closing brace and extract repetition number
+                brace_end = regex.find('}', i)
+                repetitions = int(regex[i + 2:brace_end])
+                i = brace_end
+```
+
+This part of the code looks ahead to handle repetition symbols such as `*`, `+`, `?`, and `{n}`. If the next character is `*`, `+`, or `?`, the corresponding repetition symbol is assigned to the `repetitions` variable, and the index `i` is incremented to skip over the repetition symbol. If the next character is `{`, the function finds the closing brace and extracts the repetition number, which is then assigned to the `repetitions` variable as an integer. The index `i` is updated to the position after the closing brace.
+
+```python
+        steps.append((symbols, repetitions))
+
+        # move to the next symbol
+        i += 1
+
+    return steps
+```
+
+After processing the current symbol(s) and repetition, the `symbols` and `repetitions` are appended as a tuple to the `steps` list. The index `i` is then incremented to move to the next symbol in the regular expression. Finally, the `steps` list containing all the steps is returned.
+
+This implementation allows the `parse_regex_to_steps` function to handle various elements of regular expressions, including character groups, character classes, literal characters, and different repetition patterns. The resulting list of tuples can be used by the `generate_steps` function to generate valid strings based on the provided regular expression.
+### Main Program
+
+The main program prompts the user to input a regular expression and then processes it using the `parse_regex_to_steps` function.
+
+```python
+input_ = input("Enter the number of regular expression: ")
+
+steps_parsed = parse_regex_to_steps(input_)
+
+steps_generator = generate_steps(steps_parsed)
 steps = list(steps_generator)
 ```
-Next, the `generate_steps` function is called with the selected regular expression steps, and its output is converted to a list using `list(steps_generator)`.
 
+The rest of the main program iterates over the `steps` list, generating the valid string, and displaying the step-by-step process and the final result.
 
-```
+```python
 regex_result = ""
 for i in range(len(steps)):
     step = steps[i]
@@ -168,42 +156,34 @@ for i in range(len(steps)):
     regex_result += result
 
 print(f"\nResult: {regex_result}")
+print(f"Is a valid string: {re.fullmatch(input_, regex_result) is not None}")
 ```
-The program then iterates over the `steps` list. For each step, it calls the `get_matching_string_and_description` method to obtain the generated string, description, and progress string. It prints the step number, description, and progress string, and appends the generated string to the `regex_result` variable.
-
-
-```
-print(f"Is a valid string: {re.fullmatch(regex_patterns[regex_number], regex_result) is not None}")
-```
-
-Finally, the program prints the final `regex_result` string and checks if it matches the selected regular expression pattern using the `re.fullmatch` function.
 
 ## Results
 
-The program successfully generates valid strings based on the provided regular expressions. It also displays the step-by-step process of generating the string, making it easier to understand the logic behind regular expression processing.
+The program accepts user-inputted regular expressions and generates valid strings accordingly. It also displays the step-by-step process of generating the string and checks if the final string matches the provided regular expression.
 
 Here's an example of input/output:
 
 ```
-Enter the number of regular expression: 2
-Expression 2: A*B(C|D|E)F(G|H|i){2}
+Enter the number of regular expression: J+K(L|M|N)*O?(P|Q){3}
 
-Step 1: Picking random element from ['A'] zero or more times
-A -> AA -> AAA -> AAAA
-Step 2: Repeating 'B' exactly 1 times
-B
-Step 3: Picking random element from ['C', 'D', 'E'] exactly 1 times
-D
-Step 4: Repeating 'F' exactly 1 times
-F
-Step 5: Picking random element from ['G', 'H', 'i'] exactly 2 times
-H -> HH
+Step 1: Repeating 'J' one or more times
+J -> JJ -> JJJ
+Step 2: Repeating 'K' exactly 1 times
+K
+Step 3: Picking random element from ['L', 'M', 'N'] zero or more times
+N -> NL -> NLM -> NLMM
+Step 4: Repeating 'O' is optional (0 or 1 repetitions)
+O 
+Step 5: Picking random element from ['P', 'Q'] exactly 3 times
+P -> PQ -> PQP
 
-Result: AAAABDFHH
+Result: JJJKNLMMOPQP
 Is a valid string: True
 ```
 
-The program accurately generates a valid string "AAAABDFHH" for the regular expression "A*B(C|D|E)F(G|H|i){2}" and confirms its validity using the `re.fullmatch` function from the Python `re` module.
+The program accurately generates a valid string "JJJKNLMMOPQP" for the user-inputted regular expression `J+K(L|M|N)*O?(P|Q){3}` and confirms its validity using the `re.fullmatch`.
 
 ## Conclusion
-In conclusion, this project successfully demonstrates the implementation of a program that generates valid strings based on regular expressions. The step-by-step approach, which breaks down the regular expression into individual steps, provides a clear understanding of the process and facilitates the generation of valid combinations. The program's output not only displays the final result, but also the intermediate steps. Overall, the project fulfills its objectives by generating strings that match specific regular expressions.
+In conclusion, this project demonstrates a program that generates valid strings based on user-provided regular expressions. The `parse_regex_to_steps` function enables handling arbitrary regular expressions. The program displays both the final result and the intermediate steps. Overall, the project achieves its objectives by generating strings that match a regular expressions.
