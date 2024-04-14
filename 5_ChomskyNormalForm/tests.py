@@ -47,7 +47,6 @@ def compare_grammars(grammar1, grammar2, depth_limit):
         return False
 
 
-
 class TestSTART(unittest.TestCase):
 
     def test1(self):
@@ -55,8 +54,9 @@ class TestSTART(unittest.TestCase):
                           {
                               "S": [["a", "S"], ["b"]]
                           })
-        grammar.eliminate_start_symbol()
-        print(grammar)
+
+        grammar = self.perform_basic_actions(grammar)
+
         self.assertIn(grammar.start_symbol, grammar.productions)
         self.assertEqual(grammar.productions[grammar.start_symbol], [["S"]])
         self.assertNotEqual(grammar.start_symbol, "S")
@@ -67,10 +67,22 @@ class TestSTART(unittest.TestCase):
                               "S": [["S"], ["b"]],
                               "A": [["S"]]
                            })
-        grammar.eliminate_start_symbol()
-        print(grammar)
+
+        grammar = self.perform_basic_actions(grammar)
+
         for lhs in grammar.productions.keys():
             self.assertTrue(grammar.start_symbol not in grammar.productions[lhs])
+
+    def perform_basic_actions(self, grammar):
+        print(f"before: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        original_grammar = copy.deepcopy(grammar)
+        grammar.eliminate_start_symbol()
+        print(f"\n\n\nafter: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
+                        "The grammars should generate the same language after transformation.")
+        return grammar
 
 
 class TestTERM(unittest.TestCase):
@@ -79,10 +91,8 @@ class TestTERM(unittest.TestCase):
                           {
                               "S": [["a", "S", "b"], ["b"]]
                           })
-        print(f"before: \n{grammar}")
 
-        grammar.eliminate_nonsolitary_terminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        grammar = self.perform_basic_actions(grammar)
 
         self.assertIn("N_a", grammar.productions)
         self.assertIn("N_b", grammar.productions)
@@ -95,10 +105,8 @@ class TestTERM(unittest.TestCase):
                           {
                               "S": [["a", "X", "a", "b"], ["c"]]
                           })
-        print(f"before: \n{grammar}")
 
-        grammar.eliminate_nonsolitary_terminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        grammar = self.perform_basic_actions(grammar)
 
         self.assertIn("N_a", grammar.productions)
         self.assertIn("N_b", grammar.productions)
@@ -112,14 +120,26 @@ class TestTERM(unittest.TestCase):
                               "S": [["N_a"], ["b"]],
                               "N_a": [["a"]]
                           })
-        grammar.eliminate_nonsolitary_terminals()
+        grammar = self.perform_basic_actions(grammar)
         self.assertNotIn("N_b", grammar.productions)
         self.assertEqual(grammar.productions["S"], [["N_a"], ["b"]])
 
     def test_term_empty_productions(self):
         grammar = Grammar("S", {})
-        grammar.eliminate_nonsolitary_terminals()
+        grammar = self.perform_basic_actions(grammar)
         self.assertEqual(grammar.productions, {})
+
+
+    def perform_basic_actions(self, grammar):
+        print(f"before: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        original_grammar = copy.deepcopy(grammar)
+        grammar.eliminate_nonsolitary_terminals()
+        print(f"\n\n\nafter: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
+                        "The grammars should generate the same language after transformation.")
+        return grammar
 
 
 class TestBIN(unittest.TestCase):
@@ -128,9 +148,7 @@ class TestBIN(unittest.TestCase):
                           {
                               "S": [["A", "B", "C", "D"]]
                           })
-        print(f"before: \n{grammar}")
-        grammar.eliminate_rhs_with_more_than_two_nonterminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        grammar = self.perform_basic_actions(grammar)
 
         # We expect S -> A A1, A1 -> B A2, A2 -> C D
         self.assertEqual(len(grammar.productions["S"]), 1)
@@ -142,9 +160,8 @@ class TestBIN(unittest.TestCase):
                           {
                               "S": [["A", "B"], ["C"]]
                           })
-        print(f"before: \n{grammar}")
-        grammar.eliminate_rhs_with_more_than_two_nonterminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        grammar = self.perform_basic_actions(grammar)
+
         self.assertEqual(grammar.productions["S"], [["A", "B"], ["C"]])
 
     def test_bin_complex_case(self):
@@ -152,9 +169,9 @@ class TestBIN(unittest.TestCase):
                           {
                               "S": [["A", "B", "C", "D", "E", "F"]]
                           })
-        print(f"before: \n{grammar}")
-        grammar.eliminate_rhs_with_more_than_two_nonterminals()
-        print(f"\n\n\nafter: \n{grammar}")        # Expecting a chain like S -> A A1, A1 -> B A2, ..., An-2 -> E F
+
+        grammar = self.perform_basic_actions(grammar)
+
         self.assertEqual(len(grammar.productions["S"]), 1)
         self.assertTrue(len(grammar.productions["S"][0]) == 2)
         non_terminals = [prod for nt, prods in grammar.productions.items() for prod in prods if nt != "S"]
@@ -165,14 +182,23 @@ class TestBIN(unittest.TestCase):
                           {
                               "S": [["A", "B", "C", "D", "E"]]
                           })
-        print(f"before: \n{grammar}")
-        grammar.eliminate_rhs_with_more_than_two_nonterminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        grammar = self.perform_basic_actions(grammar)
+
         # We expect transformations but focus on verifying the rule lengths.
         for production_list in grammar.productions.values():
             for production in production_list:
                 self.assertTrue(len(production) <= 2)
 
+    def perform_basic_actions(self, grammar):
+        print(f"before: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        original_grammar = copy.deepcopy(grammar)
+        grammar.eliminate_rhs_with_more_than_two_nonterminals()
+        print(f"\n\n\nafter: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
+                        "The grammars should generate the same language after transformation.")
+        return grammar
 
 class TestDEL(unittest.TestCase):
     def test_eliminate_simple_epsilon(self):
