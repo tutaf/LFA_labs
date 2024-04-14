@@ -287,5 +287,77 @@ class TestDEL(unittest.TestCase):
         self.assertEqual(grammar.productions, original_grammar.productions)
 
 
+class TestUNIT(unittest.TestCase):
+
+    def test_simple_unit_rule_elimination(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A"]],
+                              "A": [["a"], ["b"]]
+                          })
+        grammar = self.perform_basic_actions(grammar)
+        self.assertIn(["a"], grammar.productions["S"])
+        self.assertIn(["b"], grammar.productions["S"])
+        self.assertNotIn(["A"], grammar.productions["S"])
+
+    def test_no_unit_rules(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["a", "b"]],
+                              "A": [["c"]]
+                          })
+        grammar = self.perform_basic_actions(grammar)
+        self.assertEqual(grammar.productions["S"], [["a", "b"]])
+        self.assertEqual(grammar.productions["A"], [["c"]])
+
+    def test_transitive_unit_rules(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A"]],
+                              "A": [["B"]],
+                              "B": [["b"]]
+                          })
+        grammar = self.perform_basic_actions(grammar)
+        self.assertIn(["b"], grammar.productions["S"])
+        self.assertNotIn(["A"], grammar.productions["S"])
+        self.assertNotIn(["B"], grammar.productions["S"])
+
+    def test_complex_unit_rules(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A"], ["a"]],
+                              "A": [["B"], ["C"]],
+                              "B": [["b"]],
+                              "C": [["c"]]
+                          })
+        self.perform_basic_actions(grammar)
+
+    def test_cycle_unit_rules(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A"]],
+                              "A": [["B"]],
+                              "B": [["A"], ["b"]]
+                          })
+        grammar.eliminate_unit_rules()
+        self.assertIn(["b"], grammar.productions["S"])
+        self.assertIn(["b"], grammar.productions["A"])
+        self.assertIn(["b"], grammar.productions["B"])
+        self.assertNotIn(["A"], grammar.productions["B"])
+        self.assertNotIn(["B"], grammar.productions["A"])
+
+    def perform_basic_actions(self, grammar):
+        print(f"before: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 10))
+        original_grammar = copy.deepcopy(grammar)
+        grammar.eliminate_unit_rules()
+        print(f"\n\nafter: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 10))
+        self.assertTrue(compare_grammars(original_grammar, grammar, 10),
+                        "The grammars should generate the same language after transformation.")
+        return grammar
+
+
 if __name__ == "__main__":
     unittest.main()
+

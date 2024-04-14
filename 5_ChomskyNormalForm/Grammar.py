@@ -134,7 +134,42 @@ class Grammar:
         self.productions = new_productions
 
     def eliminate_unit_rules(self):
-        pass
+        # discover all unit rules
+        unit_productions = {}
+        for nonterminal, productions in self.productions.items():
+            unit_productions[nonterminal] = [
+                rhs[0] for rhs in productions if len(rhs) == 1 and rhs[0].isupper()
+            ]
+
+        # resolve unit rules by finding all transitive targets
+        transitive_closure = {}
+        for nonterminal in self.productions:
+            transitive_closure[nonterminal] = set()
+            stack = [nonterminal]
+            while stack:
+                current = stack.pop()
+                for target in unit_productions.get(current, []):
+                    if target not in transitive_closure[nonterminal]:
+                        transitive_closure[nonterminal].add(target)
+                        stack.append(target)
+
+        # create new productions by substituting unit rules
+        new_productions = {}
+        for nonterminal, productions in self.productions.items():
+            if nonterminal not in new_productions:
+                new_productions[nonterminal] = []
+
+            # add non-unit productions directly
+            non_unit_prods = [rhs for rhs in productions if not (len(rhs) == 1 and rhs[0].isupper())]
+            new_productions[nonterminal].extend(non_unit_prods)
+
+            # replacing unit rules with the productions of their targets
+            for target in transitive_closure[nonterminal]:
+                new_productions[nonterminal].extend(
+                    rhs for rhs in self.productions[target] if not (len(rhs) == 1 and rhs[0].isupper())
+                )
+
+        self.productions = new_productions
 
     def __str__(self):
         return "\n".join(f"{nt} -> {' | '.join(' '.join(sym for sym in prod) for prod in prods)}"
