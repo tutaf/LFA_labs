@@ -89,7 +89,49 @@ class Grammar:
         self.productions = new_productions
 
     def eliminate_epsilon_rules(self):
-        pass
+        # identify nullable nonterminals
+        nullable = set()
+        for nonterminal, rhs_list in self.productions.items():
+            for rhs in rhs_list:
+                if rhs == ['ε']:
+                    nullable.add(nonterminal)
+
+        # repeatedly expand nullable set to include nonterminals that can produce 'e' through other nullable nonterminals
+        changes = True
+        while changes:
+            changes = False
+            for nonterminal, rhs_list in self.productions.items():
+                for rhs in rhs_list:
+                    if all(symbol in nullable for symbol in rhs) and nonterminal not in nullable:
+                        nullable.add(nonterminal)
+                        changes = True
+
+        # generate the new productions by considering all combinations of nullable symbols being omitted
+        new_productions = {}
+        for nonterminal, rhs_list in self.productions.items():
+            new_rhs_set = set()  # use a set to avoid duplicate productions
+
+            for rhs in rhs_list:
+                if rhs == ['ε'] and nonterminal != self.start_symbol:
+                    continue  # skip e-rules except for the start symbol
+
+                # get positions of nullable symbols in the rhs
+                nullable_positions = [i for i, symbol in enumerate(rhs) if symbol in nullable]
+
+                # generate all combinations of rhs excluding each subset of nullable symbols
+                from itertools import combinations
+                new_rhs_set.add(tuple(rhs))  # include the original rhs
+                for r in range(1, len(nullable_positions) + 1):
+                    for subset in combinations(nullable_positions, r):
+                        new_rhs = [rhs[i] for i in range(len(rhs)) if i not in subset]
+                        if new_rhs or nonterminal == self.start_symbol:  # include empty string for nullable nonterminals
+                            new_rhs_set.add(tuple(new_rhs))
+
+            # convert the set back to a list for each production
+            new_productions[nonterminal] = [list(item) if item else ['ε'] for item in new_rhs_set]
+
+        # replace old productions with the new, cleaned-up ones
+        self.productions = new_productions
 
     def eliminate_unit_rules(self):
         pass
