@@ -16,10 +16,10 @@ class Grammar:
         self.eliminate_unit_rules()
 
     def eliminate_start_symbol(self):
-        """Eliminates S (start symbol) from RHS by turning it into a non-terminal and creating a new start symbol"""
         new_start_symbol = self.start_symbol + "0"                  # ensure the new start symbol is unique
         self.productions[new_start_symbol] = [[self.start_symbol]]  # add new start rule
         self.start_symbol = new_start_symbol                        # update the start symbol to the new one
+
 
     def eliminate_nonsolitary_terminals(self):
         """Eliminate terminals from RHS if they exist with other terminals or non-terminals"""

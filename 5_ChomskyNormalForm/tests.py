@@ -55,7 +55,8 @@ class TestSTART(unittest.TestCase):
                               "S": [["a", "S"], ["b"]]
                           })
 
-        grammar = self.perform_basic_actions(grammar)
+        # grammar = self.perform_basic_actions(grammar)
+        grammar.eliminate_start_symbol()
 
         self.assertIn(grammar.start_symbol, grammar.productions)
         self.assertEqual(grammar.productions[grammar.start_symbol], [["S"]])
@@ -78,7 +79,7 @@ class TestSTART(unittest.TestCase):
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_start_symbol()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
                         "The grammars should generate the same language after transformation.")
@@ -92,7 +93,8 @@ class TestTERM(unittest.TestCase):
                               "S": [["a", "S", "b"], ["b"]]
                           })
 
-        grammar = self.perform_basic_actions(grammar)
+        # grammar = self.perform_basic_actions(grammar)
+        grammar.eliminate_nonsolitary_terminals()
 
         self.assertIn("N_a", grammar.productions)
         self.assertIn("N_b", grammar.productions)
@@ -135,7 +137,7 @@ class TestTERM(unittest.TestCase):
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_nonsolitary_terminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
                         "The grammars should generate the same language after transformation.")
@@ -194,7 +196,7 @@ class TestBIN(unittest.TestCase):
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_rhs_with_more_than_two_nonterminals()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
                         "The grammars should generate the same language after transformation.")
@@ -212,7 +214,7 @@ class TestDEL(unittest.TestCase):
 
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_epsilon_rules()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
 
         # Verify that the transformed grammar preserves the language
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
@@ -233,7 +235,7 @@ class TestDEL(unittest.TestCase):
 
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_epsilon_rules()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
 
         # Ensure the transformation preserves language generation
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
@@ -254,7 +256,7 @@ class TestDEL(unittest.TestCase):
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_epsilon_rules()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
         print(generate_expressions(grammar, grammar.start_symbol, 3))
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
                         "The grammars should generate the same language after transformation.")
@@ -276,11 +278,10 @@ class TestDEL(unittest.TestCase):
 
         original_grammar = copy.deepcopy(grammar)
         grammar.eliminate_epsilon_rules()
-        print(f"\n\n\nafter: \n{grammar}")
+        print(f"\n\nafter: \n{grammar}")
         print(generate_expressions(grammar, grammar.start_symbol, 3))
 
 
-        # Ensure no changes when there are no ε rules
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
                         "The grammars should remain identical after transformation.")
         self.assertEqual(grammar.productions, original_grammar.productions)
