@@ -76,5 +76,57 @@ class TestTERM(unittest.TestCase):
         self.assertEqual(grammar.productions, {})
 
 
+class TestBIN(unittest.TestCase):
+    def test_bin_basic_split(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A", "B", "C", "D"]]
+                          })
+        print(f"before: \n{grammar}")
+        grammar.eliminate_rhs_with_more_than_two_nonterminals()
+        print(f"\n\n\nafter: \n{grammar}")
+
+        # We expect S -> A A1, A1 -> B A2, A2 -> C D
+        self.assertEqual(len(grammar.productions["S"]), 1)
+        self.assertTrue(len(grammar.productions["S"][0]) == 2)
+        self.assertTrue(all(len(rhs) == 2 for rhs_list in grammar.productions.values() for rhs in rhs_list))
+
+    def test_bin_no_split_needed(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A", "B"], ["C"]]
+                          })
+        print(f"before: \n{grammar}")
+        grammar.eliminate_rhs_with_more_than_two_nonterminals()
+        print(f"\n\n\nafter: \n{grammar}")
+        self.assertEqual(grammar.productions["S"], [["A", "B"], ["C"]])
+
+    def test_bin_complex_case(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A", "B", "C", "D", "E", "F"]]
+                          })
+        print(f"before: \n{grammar}")
+        grammar.eliminate_rhs_with_more_than_two_nonterminals()
+        print(f"\n\n\nafter: \n{grammar}")        # Expecting a chain like S -> A A1, A1 -> B A2, ..., An-2 -> E F
+        self.assertEqual(len(grammar.productions["S"]), 1)
+        self.assertTrue(len(grammar.productions["S"][0]) == 2)
+        non_terminals = [prod for nt, prods in grammar.productions.items() for prod in prods if nt != "S"]
+        self.assertTrue(all(len(prod) == 2 for prod in non_terminals))
+
+    def test_bin_length_check(self):
+        grammar = Grammar("S",
+                          {
+                              "S": [["A", "B", "C", "D", "E"]]
+                          })
+        print(f"before: \n{grammar}")
+        grammar.eliminate_rhs_with_more_than_two_nonterminals()
+        print(f"\n\n\nafter: \n{grammar}")
+        # We expect transformations but focus on verifying the rule lengths.
+        for production_list in grammar.productions.values():
+            for production in production_list:
+                self.assertTrue(len(production) <= 2)
+
+
 if __name__ == "__main__":
     unittest.main()
