@@ -10,48 +10,15 @@ class Grammar:
 
     def to_cnf(self):
         self.eliminate_start_symbol()
+        self.eliminate_epsilon_rules()
         self.eliminate_nonsolitary_terminals()
         self.eliminate_rhs_with_more_than_two_nonterminals()
-        self.eliminate_epsilon_rules()
         self.eliminate_unit_rules()
 
     def eliminate_start_symbol(self):
         new_start_symbol = self.start_symbol + "0"                  # ensure the new start symbol is unique
         self.productions[new_start_symbol] = [[self.start_symbol]]  # add new start rule
         self.start_symbol = new_start_symbol                        # update the start symbol to the new one
-
-
-    def eliminate_nonsolitary_terminals(self):
-        """Eliminate terminals from RHS if they exist with other terminals or non-terminals"""
-        # dict to store new nonterminal mappings for terminals
-        terminal_to_nonterminal = {}
-
-        # temporary dictionary to accumulate new rules to be added after the loop
-        additional_productions = {}
-
-        # cloning productions
-        new_productions = {nt: [list(rhs) for rhs in rhs_list] for nt, rhs_list in self.productions.items()}
-
-        for nonterminal, rhs_list in new_productions.items():
-            for rhs in rhs_list:
-                for i, symbol in enumerate(rhs):
-                    if symbol.islower() and len(rhs) > 1:  # it's a terminal and not solitary
-                        if symbol not in terminal_to_nonterminal:
-                            # create a new nonterminal for this terminal if not already created
-                            new_nonterminal = f'N_{symbol}'
-                            terminal_to_nonterminal[symbol] = new_nonterminal
-                            additional_productions[new_nonterminal] = [[symbol]]
-                        # replace the terminal with nonterminal in RHS
-                        rhs[i] = terminal_to_nonterminal[symbol]
-
-        # add new productions for new nonterminals to the main productions dict
-        for nonterminal, rules in additional_productions.items():
-            if nonterminal in new_productions:
-                new_productions[nonterminal].extend(rules)
-            else:
-                new_productions[nonterminal] = rules
-
-        self.productions = new_productions
 
     def eliminate_rhs_with_more_than_two_nonterminals(self):
         """Eliminates all productions with more than 2 symbols by creating new productions"""
@@ -88,15 +55,47 @@ class Grammar:
 
         self.productions = new_productions
 
+    def eliminate_nonsolitary_terminals(self):
+        """Eliminate terminals from RHS if they exist with other terminals or non-terminals"""
+        # dict to store new nonterminal mappings for terminals
+        terminal_to_nonterminal = {}
+
+        # temporary dictionary to accumulate new rules to be added after the loop
+        additional_productions = {}
+
+        # cloning productions
+        new_productions = {nt: [list(rhs) for rhs in rhs_list] for nt, rhs_list in self.productions.items()}
+
+        for nonterminal, rhs_list in new_productions.items():
+            for rhs in rhs_list:
+                for i, symbol in enumerate(rhs):
+                    if symbol.islower() and len(rhs) > 1:  # it's a terminal and not solitary
+                        if symbol not in terminal_to_nonterminal:
+                            # create a new nonterminal for this terminal if not already created
+                            new_nonterminal = f'N_{symbol}'
+                            terminal_to_nonterminal[symbol] = new_nonterminal
+                            additional_productions[new_nonterminal] = [[symbol]]
+                        # replace the terminal with nonterminal in RHS
+                        rhs[i] = terminal_to_nonterminal[symbol]
+
+        # add new productions for new nonterminals to the main productions dict
+        for nonterminal, rules in additional_productions.items():
+            if nonterminal in new_productions:
+                new_productions[nonterminal].extend(rules)
+            else:
+                new_productions[nonterminal] = rules
+
+        self.productions = new_productions
+
     def eliminate_epsilon_rules(self):
-        # identify nullable nonterminals
+        # identify nullable nonterminals (those that can generate epsilon directly)
         nullable = set()
         for nonterminal, rhs_list in self.productions.items():
             for rhs in rhs_list:
                 if rhs == ['ε']:
                     nullable.add(nonterminal)
 
-        # repeatedly expand nullable set to include nonterminals that can produce 'e' through other nullable nonterminals
+        # expand nullable set to include nonterminals that can produce epsilon through other nullable nonterminals
         changes = True
         while changes:
             changes = False
@@ -106,32 +105,24 @@ class Grammar:
                         nullable.add(nonterminal)
                         changes = True
 
-        # generate the new productions by considering all combinations of nullable symbols being omitted
-        new_productions = {}
-        for nonterminal, rhs_list in self.productions.items():
-            new_rhs_set = set()  # use a set to avoid duplicate productions
+        # remove all epsilon productions
+        for nonterminal in list(self.productions.keys()):
+            self.productions[nonterminal] = [rhs for rhs in self.productions[nonterminal] if rhs != ['ε']]
 
-            for rhs in rhs_list:
-                if rhs == ['ε'] and nonterminal != self.start_symbol:
-                    continue  # skip e-rules except for the start symbol
+        # remove all instances of nullable nonterminals from other productions
+        for nonterminal in self.productions.keys():
+            new_rhs_list = []
+            for rhs in self.productions[nonterminal]:
+                # filter out any nullable nonterminals from rhs
+                filtered_rhs = [symbol for symbol in rhs if symbol not in nullable]
+                if filtered_rhs:  # only add non-empty productions
+                    new_rhs_list.append(filtered_rhs)
+                elif nonterminal == self.start_symbol:  # allow start symbol to produce epsilon if it becomes empty
+                    new_rhs_list.append(['ε'])
+            self.productions[nonterminal] = new_rhs_list
 
-                # get positions of nullable symbols in the rhs
-                nullable_positions = [i for i, symbol in enumerate(rhs) if symbol in nullable]
-
-                # generate all combinations of rhs excluding each subset of nullable symbols
-                from itertools import combinations
-                new_rhs_set.add(tuple(rhs))  # include the original rhs
-                for r in range(1, len(nullable_positions) + 1):
-                    for subset in combinations(nullable_positions, r):
-                        new_rhs = [rhs[i] for i in range(len(rhs)) if i not in subset]
-                        if new_rhs or nonterminal == self.start_symbol:  # include empty string for nullable nonterminals
-                            new_rhs_set.add(tuple(new_rhs))
-
-            # convert the set back to a list for each production
-            new_productions[nonterminal] = [list(item) if item else ['ε'] for item in new_rhs_set]
-
-        # replace old productions with the new, cleaned-up ones
-        self.productions = new_productions
+        # remove any nonterminals that do not produce anything
+        self.productions = {nt: rhs_list for nt, rhs_list in self.productions.items() if rhs_list}
 
     def eliminate_unit_rules(self):
         # discover all unit rules

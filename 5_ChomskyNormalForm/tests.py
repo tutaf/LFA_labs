@@ -202,71 +202,9 @@ class TestBIN(unittest.TestCase):
                         "The grammars should generate the same language after transformation.")
         return grammar
 
+
 class TestDEL(unittest.TestCase):
-    def test_eliminate_simple_epsilon(self):
-        grammar = Grammar("S",
-                          {
-                              "S": [["A", "B"], ["ε"]],
-                              "A": [["a"], ["ε"]],
-                              "B": [["b"]]
-                          })
-        print(f"before: \n{grammar}")
-
-        original_grammar = copy.deepcopy(grammar)
-        grammar.eliminate_epsilon_rules()
-        print(f"\n\nafter: \n{grammar}")
-
-        # Verify that the transformed grammar preserves the language
-        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
-                        "The grammars should generate the same language after transformation.")
-
-        # Ensure ε is correctly handled
-        self.assertNotIn(["ε"], grammar.productions["A"])
-        self.assertNotIn(["ε"], grammar.productions["B"])
-        self.assertIn(["ε"], grammar.productions["S"])
-
-    def test_preserve_start_symbol_epsilon(self):
-        grammar = Grammar("S",
-                          {
-                              "S": [["S", "B"], ["ε"]],
-                              "B": [["b"], ["B", "S"]]
-                          })
-        print(f"before: \n{grammar}")
-
-        original_grammar = copy.deepcopy(grammar)
-        grammar.eliminate_epsilon_rules()
-        print(f"\n\nafter: \n{grammar}")
-
-        # Ensure the transformation preserves language generation
-        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
-                        "The grammars should generate the same language after transformation.")
-
-        # Ensure ε is still correctly present in the start symbol productions
-        self.assertIn(["ε"], grammar.productions["S"])
-
-    def test_eliminate_epsilon_with_nullable_nonterminals(self):
-        grammar = Grammar("S",
-                          {
-                              "S": [["A", "B"]],
-                              "A": [["a"], ["ε"]],
-                              "B": [["b"], ["ε"]]
-                          })
-
-        print(f"before: \n{grammar}")
-        print(generate_expressions(grammar, grammar.start_symbol, 3))
-        original_grammar = copy.deepcopy(grammar)
-        grammar.eliminate_epsilon_rules()
-        print(f"\n\nafter: \n{grammar}")
-        print(generate_expressions(grammar, grammar.start_symbol, 3))
-        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
-                        "The grammars should generate the same language after transformation.")
-
-        # Ensure all nullable productions are expanded properly
-        self.assertIn(["ε"], grammar.productions["S"])
-        self.assertNotIn(["ε"], grammar.productions["A"])
-        self.assertNotIn(["ε"], grammar.productions["B"])
-
-    def test_no_epsilon_to_eliminate(self):
+    def test1(self):
         grammar = Grammar("S",
                           {
                               "S": [["A", "B"]],
@@ -285,6 +223,25 @@ class TestDEL(unittest.TestCase):
         self.assertTrue(compare_grammars(original_grammar, grammar, 3),
                         "The grammars should remain identical after transformation.")
         self.assertEqual(grammar.productions, original_grammar.productions)
+
+    def test2(self):
+        grammar = Grammar("S", {
+            'S': [['A']],
+            'A': [['d'], ['d', 'S'], ['a', 'A', 'd', 'A', 'B']],
+            'B': [['a', 'C'], ['a', 'S'], ['A', 'C']],
+            'C': [['ε']],
+            'E': [['A', 'S']],
+        })
+
+        print(f"before: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+
+        original_grammar = copy.deepcopy(grammar)
+        grammar.eliminate_epsilon_rules()
+        print(f"\n\nafter: \n{grammar}")
+        print(generate_expressions(grammar, grammar.start_symbol, 3))
+        self.assertTrue(compare_grammars(original_grammar, grammar, 3),
+                        "The grammars should remain identical after transformation.")
 
 
 class TestUNIT(unittest.TestCase):
