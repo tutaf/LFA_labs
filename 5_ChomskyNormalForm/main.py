@@ -44,6 +44,24 @@ grammar = Grammar("S", {
         })
 
 pretty_print(grammar)
-print("\n")
-grammar.to_cnf()
+
+print("\nSTART Transformation:")
+grammar.eliminate_start_symbol()
 pretty_print(grammar)
+
+print("\nDEL Transformation:")
+grammar.eliminate_epsilon_rules()
+pretty_print(grammar)
+
+print("\nTERM Transformation:")
+grammar.eliminate_nonsolitary_terminals()
+pretty_print(grammar)
+
+print("\nBIN Transformation:")
+grammar.eliminate_rhs_with_more_than_two_nonterminals()
+pretty_print(grammar)
+
+print("\nUNIT Transformation:")
+grammar.eliminate_unit_rules()
+pretty_print(grammar)
+
