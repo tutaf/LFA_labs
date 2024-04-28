@@ -76,6 +76,7 @@ def lexer(input_text):
 class NodeType:
     ROOT = 'ROOT'
     PARAGRAPH = 'PARAGRAPH'
+    HEADING = 'HEADING'
     BOLD = 'BOLD'
     ITALIC = 'ITALIC'
     IMAGE = 'IMAGE'
@@ -101,7 +102,12 @@ class Node:
         paragraph_contents = []
         for token in self.tokens:
             if token.kind == TokenKind.NEWLINE and len(paragraph_contents) > 0:
-                self.children.append(Node(NodeType.PARAGRAPH, None, paragraph_contents))
+                if paragraph_contents[0].kind == TokenKind.HASH:
+                    node_value = len(paragraph_contents[0].value)
+                    paragraph_contents.pop(0)
+                    self.children.append(Node(NodeType.HEADING, node_value, paragraph_contents))
+                else:
+                    self.children.append(Node(NodeType.PARAGRAPH, None, paragraph_contents))
                 paragraph_contents = []
 
             if token.kind != TokenKind.NEWLINE:
@@ -168,6 +174,8 @@ class Node:
 
 
 markdown_text = """
+# Heading 1
+### Heading 3 with *italic*
 [some **bold** link](http://example.com)
 [Link](http://example.com)
 ![Image](http://example.com/img.png)
@@ -178,11 +186,12 @@ Text   here
 
 
 example_tokens = lexer(markdown_text)
+print("Lexer output:\n")
 for example_token in example_tokens:
     print(example_token)
 
 
-print("\n===========================\n")
+print("\n===========================\nAST:\n")
 node = Node(NodeType.ROOT, None, example_tokens)
 print(node)
 
