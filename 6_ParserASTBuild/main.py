@@ -83,14 +83,18 @@ class NodeType:
 
 
 class Node:
-    def __init__(self, node_type, node_value, input_tokens: List[Token]):
+    def __init__(self, node_type, node_value, input_tokens: List[Token], children=None):
+        if children is None:
+            children = []
         self.node_type = node_type
         self.node_value = node_value
-        self.children = []
+        self.children = children
         self.tokens = input_tokens
 
         if node_type == NodeType.ROOT:
             self.__process_paragraphs__()
+        else:
+            self.__process_paragraph_contents__()
 
     def __process_paragraphs__(self):
         paragraph_contents = []
@@ -102,9 +106,29 @@ class Node:
             if token.kind != TokenKind.NEWLINE:
                 paragraph_contents.append(token)
 
+    def __process_paragraph_contents__(self):
+        emphasized_contents = []
+        star_number = 0  # 0 - not currently parsing any emphasized contents
+        for token in self.tokens:
+            if token.kind == TokenKind.STAR and star_number == 0:
+                star_number = len(token.value)
+                continue
 
-    # def __parse_paragraph_contents__(self):
+            if star_number != 0 and not (token.kind == TokenKind.STAR and len(token.value) == star_number):
+                emphasized_contents.append(token)
 
+            if token.kind == TokenKind.STAR and len(token.value) == star_number:  # if it's a closing star
+                if star_number == 1:
+                    self.children.append(Node(NodeType.ITALIC, None, emphasized_contents))
+                elif star_number == 2:
+                    self.children.append(Node(NodeType.BOLD, None, emphasized_contents))
+                elif star_number == 3:
+                    new_node = Node(NodeType.ITALIC, None, emphasized_contents)
+                    self.children.append(Node(NodeType.BOLD, None, [], children=[new_node]))
+                else:
+                    raise SyntaxError("Incorrect number of stars")
+                emphasized_contents = []
+                star_number = 0
 
     # def __str__(self):
     #
@@ -114,7 +138,7 @@ class Node:
 
 markdown_text = """
 [Link](http://example.com)
-![Image](http://example.com/img.png)
+[Image](http://example.com/img.png)
 Text   here
 *italic* **bold** ***bold AND italic***
 *italic text* **[some link](http://example.com) some other text** ***bold AND italic***
