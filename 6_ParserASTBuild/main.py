@@ -117,6 +117,16 @@ class Node:
             if star_number != 0 and not (token.kind == TokenKind.STAR and len(token.value) == star_number):
                 emphasized_contents.append(token)
 
+            if star_number == 0:  # we're not inside an emphasized block
+                if token.kind == TokenKind.TEXT:
+                    self.children.append(Node(NodeType.TEXT, token.value, []))
+                elif token.kind == TokenKind.LINK:
+                    link_content_tokens = lexer(token.value[0])
+                    self.children.append(Node(NodeType.LINK, token.value[1], link_content_tokens))
+                elif token.kind == TokenKind.IMAGE:
+                    alttext_content_tokens = lexer(token.value[0])
+                    self.children.append(Node(NodeType.IMAGE, token.value[1], alttext_content_tokens))
+
             if token.kind == TokenKind.STAR and len(token.value) == star_number:  # if it's a closing star
                 if star_number == 1:
                     self.children.append(Node(NodeType.ITALIC, None, emphasized_contents))
@@ -137,6 +147,7 @@ class Node:
 
 
 markdown_text = """
+[some **bold** link](http://example.com)
 [Link](http://example.com)
 [Image](http://example.com/img.png)
 Text   here
