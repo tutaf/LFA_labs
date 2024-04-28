@@ -1,5 +1,6 @@
 import re
 from typing import List
+from graphviz import Digraph
 
 
 class TokenKind:
@@ -146,6 +147,24 @@ class Node:
             ret += child.__str__(level+1)
         return ret
 
+    def visualize(self, graph=None, parent=None):
+        if graph is None:
+            graph = Digraph(node_attr={'shape': 'rectangle', 'fontname': 'Arial'})
+
+        # Create a label for the node based on its type and value
+        node_label = f"{self.node_type}: {self.node_value if self.node_value else ''}"
+        # Each node must have a unique identifier
+        node_id = str(id(self))
+        graph.node(node_id, label=node_label)
+
+        if parent:
+            graph.edge(parent, node_id)
+
+        for child in self.children:
+            child.visualize(graph, node_id)
+
+        return graph
+
 
 
 markdown_text = """
@@ -167,3 +186,5 @@ print("\n===========================\n")
 node = Node(NodeType.ROOT, None, example_tokens)
 print(node)
 
+graph = node.visualize()
+graph.render('output', view=True)
