@@ -172,16 +172,14 @@ class Node:
         return graph
 
 
-
 markdown_text = """
-# Heading 1
-### Heading 3 with *italic*
-[some **bold** link](http://example.com)
-[Link](http://example.com)
-![Image](http://example.com/img.png)
-Text   here
-*italic* **bold** ***bold AND italic***
-*italic text* **[some link](http://example.com) some other text** ***bold AND italic***
+## Heading 2
+just text
+*italic text* **bold text** ***italic & bold***
+**mostly bold but also *italic* **
+[a link](http://example.com) and ![an image](http://example.com/img.png)
+**[another link](http://example.com) some other text**.
+[a **bold** link](https://youtu.be/HIcSWuKMwOw)
 """
 
 
