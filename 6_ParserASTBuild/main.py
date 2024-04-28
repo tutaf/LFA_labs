@@ -140,16 +140,18 @@ class Node:
                 emphasized_contents = []
                 star_number = 0
 
-    # def __str__(self):
-    #
-    #     return f"{self.node_type}: {self.node_value}, {self.children} ||| {self.tokens}"
+    def __str__(self, level=0):
+        ret = "  " * level + f"{self.node_type} {self.node_value if self.node_value else ''}\n"
+        for child in self.children:
+            ret += child.__str__(level+1)
+        return ret
 
 
 
 markdown_text = """
 [some **bold** link](http://example.com)
 [Link](http://example.com)
-[Image](http://example.com/img.png)
+![Image](http://example.com/img.png)
 Text   here
 *italic* **bold** ***bold AND italic***
 *italic text* **[some link](http://example.com) some other text** ***bold AND italic***
